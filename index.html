@@ -3,63 +3,51 @@
 <head>
   <meta charset="utf-8" />
   <title>Lamumu Memory Match</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     :root{
-      /* Lamumu renkleri (logo: mavi + kırmızı + pembe) */
+      /* Lamumu paleti */
       --lamu-blue:#2D6BFF;
       --lamu-red:#FF3B59;
       --lamu-pink:#FF66CC;
 
-      /* Var olan değişken adlarını bozmadan yeni palete map’liyoruz */
-      --amber: var(--lamu-blue);  /* ana vurgu => mavi */
-      --teal:  var(--lamu-pink);  /* ikincil vurgu => pembe */
-      --ink:#0A0B0D; 
-      --ink-2:#0E1114;
+      /* mevcut değişken isimlerine map */
+      --amber: var(--lamu-blue);
+      --teal:  var(--lamu-pink);
+      --ink:#0A0B0D;
+
       --gap:10px;
       --board-max: 520px;
-      --ring: 0 0 0 3px rgba(45,107,255,.28); /* mavi halo */
+      --ring: 0 0 0 3px rgba(45,107,255,.28);
+      --vh:1vh; /* iOS 100vh fix */
     }
 
     *{ box-sizing:border-box; margin:0; padding:0; font-family:"Montserrat",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
 
-    /* ===== LAMUMU SOFT BACKDROP (göz yormaz) ===== */
-body{
-  display:flex; flex-direction:column; align-items:center; gap:1rem;
-  min-height:100vh; padding:1rem; padding-bottom:130px;
-  color:#EDEFF2; background-color:var(--ink);
-
-  /* büyük, yumuşak üçlü renk “bokeh” + hafif vignette */
-  background-image:
-    /* mavi yumuşak küre (sol-üst) */
-    radial-gradient(900px 600px at 18% 8%, rgba(45,107,255,.30), transparent 75%),
-    /* kırmızı yumuşak küre (sağ-üst) */
-    radial-gradient(800px 520px at 82% 10%, rgba(255,59,89,.30), transparent 75%),
-    /* pembe yumuşak küre (alt-orta) */
-    radial-gradient(900px 700px at 50% 92%, rgba(255,102,204,.30), transparent 75%),
-    /* hafif parıltı */
-    radial-gradient(60% 40% at 50% 110%, rgba(255,255,255,.04), transparent 75%),
-    /* koyu degrade taban */
-    linear-gradient(180deg, #0b0d10 0%, #0f1216 100%);
-  background-repeat:no-repeat;
-  background-attachment:fixed, fixed, fixed, scroll, scroll;
-  background-size:cover, cover, cover, auto, auto;
-}
-
-/* çok hafif dokulu nokta ızgarası (grain etkisi) */
-body::before{
-  content:""; position:fixed; inset:0; pointer-events:none;
-  /* iki katman noktacık: mavi ve pembe; çok düşük opaklık */
-  background-image:
-    radial-gradient(rgba(45,107,255,.08) 0.6px, transparent 0.7px),
-    radial-gradient(rgba(255,102,204,.07) 0.6px, transparent 0.7px);
-  background-size: 26px 26px, 34px 34px;
-  background-position: 0 0, 13px 17px;
-  opacity:.20;           /* göz yormasın diye oldukça düşük */
-  z-index:0;
-}
-
+    /* Arkaplan */
+    body{
+      display:flex; flex-direction:column; align-items:center; gap:1rem;
+      min-height:calc(var(--vh) * 100); padding:1rem; padding-bottom:130px;
+      color:#EDEFF2; background-color:var(--ink);
+      background-image:
+        radial-gradient(900px 600px at 18% 8%, rgba(45,107,255,.30), transparent 75%),
+        radial-gradient(800px 520px at 82% 10%, rgba(255,59,89,.30), transparent 75%),
+        radial-gradient(900px 700px at 50% 92%, rgba(255,102,204,.30), transparent 75%),
+        radial-gradient(60% 40% at 50% 110%, rgba(255,255,255,.04), transparent 75%),
+        linear-gradient(180deg, #0b0d10 0%, #0f1216 100%);
+      background-repeat:no-repeat; background-attachment:fixed, fixed, fixed, scroll, scroll;
+      background-size:cover, cover, cover, auto, auto;
+    }
+    body::before{
+      content:""; position:fixed; inset:0; pointer-events:none; opacity:.20;
+      background-image:
+        radial-gradient(rgba(45,107,255,.08) 0.6px, transparent 0.7px),
+        radial-gradient(rgba(255,102,204,.07) 0.6px, transparent 0.7px);
+      background-size: 26px 26px, 34px 34px;
+      background-position: 0 0, 13px 17px;
+      z-index:0;
+    }
 
     h1,h2{ text-align:center; color:var(--amber); }
     h1{ font-size:2rem; line-height:1.2; text-shadow:0 0 18px rgba(45,107,255,.35); }
@@ -84,21 +72,13 @@ body::before{
     /* BOARD */
     #board{
       width:min(95vw, var(--board-max));
-      display:grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap:var(--gap);
-      margin-top:.5rem;
+      display:grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap:var(--gap); margin-top:.5rem;
     }
 
-    .card{
-      position:relative;
-      width:100%;
-      aspect-ratio:1/1;
-      perspective:600px; cursor:pointer;
-    }
+    .card{ position:relative; width:100%; aspect-ratio:1/1; perspective:600px; cursor:pointer; }
     .card img{
-      position:absolute; inset:0;
-      width:100%; height:100%; border-radius:12px;
+      position:absolute; inset:0; width:100%; height:100%; border-radius:12px;
       backface-visibility:hidden; transition: transform .45s;
       border:2px solid rgba(45,107,255,.22);
       box-shadow:0 0 10px rgba(255,102,204,.16);
@@ -108,43 +88,44 @@ body::before{
     .card .back { transform: rotateY(0deg); background:#12171b; }
     .card.flip .front{ transform: rotateY(0deg); }
     .card.flip .back { transform: rotateY(180deg); }
-    .card.matched{ cursor:default; }
     .card.matched img{ border-color:rgba(255,102,204,.8); box-shadow:0 0 18px rgba(255,102,204,.45); }
 
     /* RESULT */
     #result{
-      display:none; flex-direction:column; align-items:center; gap:.75rem;
+      display:none; flex-direction:column; align-items:center; gap:.65rem;
       padding:1.2rem 1.4rem; border:2px solid var(--amber); border-radius:16px;
       box-shadow:0 0 16px rgba(45,107,255,.45), 0 0 24px rgba(255,102,204,.28) inset;
       background:linear-gradient(180deg, rgba(15,19,22,.92), rgba(10,11,13,.92));
-      color:#eef3f7; z-index:10;
-      max-width:min(92vw, 520px);
+      color:#eef3f7; z-index:10; max-width:min(92vw, 520px);
     }
+    #result-rank{ font-weight:800; color:var(--amber); }
 
+    /* Buttons */
     #buttons{ display:flex; gap:.8rem; flex-wrap:wrap; justify-content:center; }
-
     button, a.button{
       border:none; color:#0c0e0f; font-weight:800; cursor:pointer; text-decoration:none; letter-spacing:.2px;
       padding:.65rem 1.1rem; border-radius:12px;
       background:linear-gradient(90deg, var(--lamu-red), var(--lamu-blue), var(--lamu-pink));
       box-shadow:0 6px 18px rgba(45,107,255,.35), 0 0 0 1px rgba(255,102,204,.25) inset;
+      touch-action: manipulation;
     }
     .button-sm{ padding:.45rem .8rem; font-weight:700; font-size:.9rem; }
     button[disabled]{ opacity:.6; cursor:not-allowed; }
     button:not([disabled]):hover, a.button:hover{ filter:brightness(1.08); box-shadow:0 8px 22px rgba(45,107,255,.45); }
     button:active, a.button:active{ transform: translateY(1px); }
 
-    /* HIDDEN SHARE CARD */
+    /* SHARE CARD */
     #share-wrapper{ position:absolute; left:-10000px; top:-10000px; }
     .share-card{
       width:420px; height:240px; border-radius:16px;
       background: radial-gradient(70% 90% at 30% 20%, #13181c, #0a0b0d);
-      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.4rem;
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.35rem;
       color:#fff; border:4px solid var(--amber); box-shadow:0 0 16px rgba(45,107,255,.4); overflow:hidden;
     }
     .share-avatar{ width:56px; height:56px; border-radius:50%; border:3px solid var(--amber); object-fit:cover; }
-    .share-card h2{ margin-bottom:.1rem; font-size:1.5rem; color:var(--amber); }
+    .share-card h2{ margin-bottom:.1rem; font-size:1.4rem; color:var(--amber); }
     .share-card p{ font-size:1rem; color:#f3e9e2; }
+    .share-rank{ font-weight:800; color:var(--amber); }
 
     /* PLAYER BADGE */
     #player-badge{
@@ -162,8 +143,7 @@ body::before{
     #live-card-container{
       position:fixed; left:0; right:0;
       bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-      display:none; z-index:25;
-      display:flex; justify-content:center; pointer-events:none;
+      z-index:25; display:flex; justify-content:center; pointer-events:none;
     }
     #live-card{
       pointer-events:auto;
@@ -186,7 +166,33 @@ body::before{
     }
     #credits a{ color:var(--amber); text-decoration:underline; }
 
-    /* ------- MOBIL ------- */
+    /* LEADERBOARD (Lamumu stil) */
+    #leaderboard{
+      position:fixed; top:6rem; right:1rem; z-index:40;
+      width:min(320px, 90vw); max-height:70vh; overflow:auto;
+      padding:0.9rem 1rem; border-radius:16px;
+      background: radial-gradient(70% 90% at 30% 20%, #13181c, #0a0b0d);
+      border:2px solid var(--amber);
+      box-shadow:0 0 16px rgba(45,107,255,.35), 0 0 24px rgba(255,102,204,.25) inset;
+      display:block;
+    }
+    #lb-title{ font-weight:800; color:var(--amber); margin-bottom:.4rem; display:flex; justify-content:space-between; align-items:center; }
+    #lb-meta{ font-size:.85rem; opacity:.8; color:#dbe3ea; }
+    #lb-list{ list-style:none; display:flex; flex-direction:column; gap:.35rem; }
+    .lb-item{ display:flex; align-items:center; gap:.6rem; }
+    .lb-rank{ width:2.2rem; text-align:right; font-weight:800; color:var(--amber); }
+    .lb-avatar{ width:24px; height:24px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,102,204,.6); }
+    .lb-handle{ font-weight:700; color:#e7edf3; }
+    .lb-stats{ margin-left:auto; opacity:.9; font-size:.95rem; }
+    #lb-loading{ text-align:center; padding:.5rem 0; opacity:.7; display:none; }
+
+    /* Mobil uyarlamalar */
+    #lb-toggle{
+      position:fixed; z-index:41; right:.6rem; bottom: calc(170px + env(safe-area-inset-bottom, 0px));
+      display:none;
+    }
+    .hidden{ display:none !important; }
+
     @media (max-width: 480px){
       :root{ --gap:8px; }
       h1{ font-size:1.6rem; }
@@ -194,6 +200,8 @@ body::before{
       #player-badge{ right:auto; left:.6rem; top:.6rem; }
       #game-info{ font-size:.95rem; }
       #result{ padding:1rem 1.1rem; }
+      #leaderboard{ right:.6rem; left:.6rem; top:auto; bottom: calc(120px + env(safe-area-inset-bottom, 0px)); max-height:40vh; }
+      #lb-toggle{ display:block; }
     }
     @media (max-width: 360px){
       #board{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -223,12 +231,24 @@ body::before{
   <div id="result">
     <h2>Congratulations!</h2>
     <p id="result-message"></p>
+    <p id="result-rank"></p>
     <div id="buttons">
       <a id="download-btn" class="button" href="#">Download Your Score Card</a>
       <a id="share-btn" class="button" target="_blank" href="#">Share on X</a>
       <button id="restart-btn" class="button">Restart</button>
     </div>
   </div>
+
+  <!-- LEADERBOARD -->
+  <aside id="leaderboard">
+    <div id="lb-title">
+      <span>🏆 Leaderboard</span>
+      <span id="lb-meta"></span>
+    </div>
+    <ol id="lb-list"></ol>
+    <div id="lb-loading">Loading…</div>
+  </aside>
+  <button id="lb-toggle" class="button button-sm" aria-expanded="true">Hide LB</button>
 
   <!-- INTRO OVERLAY -->
   <div id="intro">
@@ -267,6 +287,7 @@ body::before{
       <p id="sc-username">@player</p>
       <p id="sc-score">Score: 0/8</p>
       <p id="sc-time">Time left: 0s</p>
+      <p id="sc-rank" class="share-rank">Rank: #–</p>
     </div>
   </div>
 
@@ -276,6 +297,10 @@ body::before{
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
+    // iOS gerçek 100vh
+    function setVh(){ document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
+    document.addEventListener('DOMContentLoaded', () => { setVh(); window.addEventListener('resize', setVh, {passive:true}); });
+
     // CONFIG
     const FRONT_IMAGES = [
       "images/img1.png","images/img2.png","images/img3.png","images/img4.png",
@@ -284,13 +309,14 @@ body::before{
     const BACK_IMAGE = "images/back.png";
     const MEMORIZE_SECONDS = 15, PLAY_SECONDS = 20;
 
-    // DOM refs
+    // DOM
     const boardEl = document.getElementById("board"),
           memorizeCd = document.getElementById("memorize-countdown"),
           playCd = document.getElementById("play-countdown"),
           scoreDisplay = document.getElementById("score-display"),
           resultCard = document.getElementById("result"),
           resultMsg = document.getElementById("result-message"),
+          resultRank = document.getElementById("result-rank"),
           downloadBtn = document.getElementById("download-btn"),
           shareBtn = document.getElementById("share-btn"),
           restartBtn = document.getElementById("restart-btn"),
@@ -309,13 +335,23 @@ body::before{
           scAvatar = document.getElementById("sc-avatar"),
           scUsername = document.getElementById("sc-username"),
           scScore = document.getElementById("sc-score"),
-          scTime = document.getElementById("sc-time");
+          scTime = document.getElementById("sc-time"),
+          scRank = document.getElementById("sc-rank"),
+          lb = document.getElementById('leaderboard'),
+          lbList = document.getElementById('lb-list'),
+          lbMeta = document.getElementById('lb-meta'),
+          lbLoading = document.getElementById('lb-loading'),
+          lbToggle = document.getElementById('lb-toggle');
 
     // STATE
     let firstCard = null, lockBoard = false, matchedPairs = 0,
-        playTimer, playTimeLeft = 20, xname = "player",
-        isMemorizePhase = false, memorizeTimer, memorizeTimeLeft = 15,
-        avatarUrl = "";
+        playTimer, playTimeLeft = PLAY_SECONDS, username = "player",
+        isMemorizePhase = false, memorizeTimer, memorizeTimeLeft = MEMORIZE_SECONDS,
+        avatarUrl = "", playStartMs = 0;
+
+    // Leaderboard state
+    let lbOffset = 0, lbPage = 50, lbTotal = null, lbIsLoading = false;
+    let myRank = null;
 
     const sanitizeHandle = (v) => v.replace(/\s+/g,"").replace(/^@/,"");
     const resolveAvatar = (handle) => `https://unavatar.io/x/${encodeURIComponent(handle)}`;
@@ -326,17 +362,84 @@ body::before{
       profileAvatar.onerror = onerr; liveAvatar.onerror = onerr; scAvatar.onerror = onerr;
     }
 
+    // ------ Leaderboard API ------
+    async function fetchLeaderboardPage(start=0, count=50, rankFor=null){
+      const url = new URL('/api/leaderboard', window.location.origin);
+      url.searchParams.set('start', String(start));
+      url.searchParams.set('count', String(count));
+      if (rankFor) url.searchParams.set('rankFor', rankFor);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('leaderboard failed');
+      return res.json(); // {items[{username,score,updatedAt}], start, count, total, rank?}
+    }
+
+    function avatarFor(handle){ return `https://unavatar.io/x/${encodeURIComponent(handle)}`; }
+
+    function renderLeaderboardItems(items, startIndex){
+      items.forEach((it, idx) => {
+        const rank = startIndex + idx + 1;
+        const li = document.createElement('li');
+        li.className = 'lb-item';
+        const av = avatarFor(it.username);
+        li.innerHTML = `
+          <span class="lb-rank">#${rank}</span>
+          <img class="lb-avatar" src="${av}" onerror="this.style.visibility='hidden'"/>
+          <span class="lb-handle">@${it.username}</span>
+          <span class="lb-stats">${it.score}/8</span>
+        `;
+        lbList.appendChild(li);
+      });
+    }
+
+    async function resetAndLoadLeaderboard(rankFor=null){
+      lbList.innerHTML = '';
+      lbOffset = 0; lbTotal = null; myRank = null;
+      await loadMoreLeaderboard(rankFor);
+    }
+
+    async function loadMoreLeaderboard(rankFor=null){
+      if (lbIsLoading) return;
+      lbIsLoading = true; lbLoading.style.display = 'block';
+      try{
+        const data = await fetchLeaderboardPage(lbOffset, lbPage, rankFor);
+        if (lbTotal == null) lbTotal = data.total ?? 0;
+        if (typeof data.rank === 'number') myRank = data.rank;
+        renderLeaderboardItems(data.items || [], lbOffset);
+        lbOffset += (data.items || []).length;
+        lbMeta.textContent = lbTotal ? `${lbOffset}/${lbTotal}` : '';
+      }finally{
+        lbIsLoading = false; lbLoading.style.display = 'none';
+      }
+    }
+
+    lb.addEventListener('scroll', async () => {
+      const nearBottom = lb.scrollTop + lb.clientHeight >= lb.scrollHeight - 80;
+      if (nearBottom && (lbTotal == null || lbOffset < lbTotal)) {
+        await loadMoreLeaderboard();
+      }
+    });
+
+    if (lbToggle){
+      lbToggle.addEventListener('click', () => {
+        const hidden = lb.classList.toggle('hidden');
+        lbToggle.textContent = hidden ? 'Show LB' : 'Hide LB';
+        lbToggle.setAttribute('aria-expanded', String(!hidden));
+      });
+    }
+
     // START
-    startBtn.addEventListener("click", () => {
+    startBtn.addEventListener("click", async () => {
       const val = sanitizeHandle(xnameInput.value || "");
       if (!val) { alert("Lütfen X kullanıcı adınızı girin (örn. @sizinadiniz)."); return; }
-      xname = val; avatarUrl = resolveAvatar(xname); setAllAvatars(avatarUrl);
-      profileHandle.textContent = "@" + xname; liveName.textContent = "@" + xname; scUsername.textContent = "@" + xname;
+      username = val; avatarUrl = resolveAvatar(username); setAllAvatars(avatarUrl);
+      profileHandle.textContent = "@" + username; liveName.textContent = "@" + username; scUsername.textContent = "@" + username;
 
       playerBadge.style.display = "flex";
       liveContainer.style.display = "flex";
       intro.style.display = "none";
       initGame();
+
+      try { await resetAndLoadLeaderboard(username); } catch(e){ console.error(e); }
     });
 
     restartBtn.addEventListener("click", () => {
@@ -349,7 +452,7 @@ body::before{
     function initGame(){
       clearInterval(memorizeTimer); clearInterval(playTimer);
       matchedPairs = 0; firstCard = null; lockBoard = false;
-      memorizeTimeLeft = 15; playTimeLeft = 20;
+      memorizeTimeLeft = MEMORIZE_SECONDS; playTimeLeft = PLAY_SECONDS;
       createBoard();
       isMemorizePhase = true;
       boardEl.style.pointerEvents = 'none';
@@ -375,8 +478,9 @@ body::before{
       updateScore();
     }
 
+    // Memorize
     function startMemorizePhase(){
-      memorizeTimeLeft = 15;
+      memorizeTimeLeft = MEMORIZE_SECONDS;
       memorizeCd.textContent = `Memorize: ${memorizeTimeLeft}s`;
       playCd.textContent = ""; updateLiveCard();
       memorizeTimer = setInterval(() => {
@@ -390,8 +494,10 @@ body::before{
     }
     function flipAllToBack(){ document.querySelectorAll(".card").forEach(c => c.classList.remove("flip")); }
 
+    // Play
     function startPlayPhase(){
-      playTimeLeft = 20;
+      playStartMs = Date.now();
+      playTimeLeft = PLAY_SECONDS;
       playCd.textContent = `Time: ${playTimeLeft}s`; updateLiveCard();
       playTimer = setInterval(() => {
         playTimeLeft--; playCd.textContent = `Time: ${playTimeLeft}s`; updateLiveCard();
@@ -399,6 +505,7 @@ body::before{
       }, 1000);
     }
 
+    // Card click
     function handleCard(e){
       if (isMemorizePhase) return;
       const card = e.currentTarget;
@@ -421,11 +528,12 @@ body::before{
       }
     }
 
-    function endGame(){
+    // End
+    async function endGame(){
       clearInterval(playTimer);
       boardEl.style.pointerEvents = "none";
       memorizeCd.textContent = ""; playCd.textContent = "";
-      const msg = `@${xname} — Score: ${matchedPairs}/${FRONT_IMAGES.length} • Time left: ${playTimeLeft}s`;
+      const msg = `@${username} — Score: ${matchedPairs}/${FRONT_IMAGES.length} • Time left: ${playTimeLeft}s`;
       resultMsg.textContent = msg;
       updateShareCardFields();
       resultCard.style.display = "flex";
@@ -433,8 +541,18 @@ body::before{
       const tweetText = encodeURIComponent(`I just played Lamumu Memory Match! My score: ${matchedPairs}/${FRONT_IMAGES.length}`);
       const tweetUrl = encodeURIComponent(window.location.href);
       shareBtn.href = `https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}`;
+
+      // DB'ye gönder + rank tazele
+      try {
+        const elapsed = Math.max(0, Date.now() - playStartMs);
+        await submitScore(username, matchedPairs, elapsed);
+        await resetAndLoadLeaderboard(username);
+        resultRank.textContent = (typeof myRank === 'number') ? `Your Rank: #${myRank}` : '';
+        updateShareCardFields();
+      } catch(e){ console.error('submit/leaderboard error', e); }
     }
 
+    // Live & Share
     function updateScore(){ scoreDisplay.textContent = `Matches: ${matchedPairs}/${FRONT_IMAGES.length}`; }
     function currentTimeLeft(){ return isMemorizePhase ? memorizeTimeLeft : playTimeLeft; }
     function updateLiveCard(){
@@ -442,9 +560,10 @@ body::before{
       updateShareCardFields();
     }
     function updateShareCardFields(){
-      scUsername.textContent = "@" + xname;
+      scUsername.textContent = "@" + username;
       scScore.textContent = `Score: ${matchedPairs}/${FRONT_IMAGES.length}`;
       scTime.textContent = `Time left: ${currentTimeLeft()}s`;
+      scRank.textContent = `Rank: ${typeof myRank === 'number' ? '#' + myRank : '#–'}`;
       if (avatarUrl) setAllAvatars(avatarUrl);
     }
 
@@ -458,8 +577,22 @@ body::before{
     downloadBtn.addEventListener("click", (e) => { e.preventDefault(); downloadCurrentScore(); });
     liveDownloadBtn.addEventListener("click", (e) => { e.preventDefault(); downloadCurrentScore(); });
 
+    async function submitScore(username, matched, timeMs){
+      const res = await fetch('/api/submit-score', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ username, matched, timeMs }) // <-- yeni alan isimleri
+      });
+      if (!res.ok) throw new Error('submit failed');
+      return res.json();
+    }
+
+    // Utils
     const frontSrc = card => card.querySelector('.front').src;
     function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
+
+    // sayfa açılınca (kullanıcı girmeden) LB yükle
+    resetAndLoadLeaderboard().catch(console.error);
   </script>
 </body>
 </html>
