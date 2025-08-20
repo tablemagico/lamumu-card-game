@@ -1,11 +1,11 @@
 // Node.js Serverless Function (Vercel)
-// Kullanım: REDIS_URL zorunlu. İsteğe bağlı: REDIS_NS (varsayılan "lamu").
+// ENV: REDIS_URL zorunlu, REDIS_NS opsiyonel (varsayılan 'lamu')
 module.exports.config = { runtime: 'nodejs' };
 
 const Redis = require('ioredis');
 
-const NS = process.env.REDIS_NS || 'lamu';         // yeni proje namespace'i
-const K  = (s) => `${NS}:${s}`;                    // key helper
+const NS = process.env.REDIS_NS || 'lamu';
+const K  = (s) => `${NS}:${s}`;
 
 let client;
 function getRedis() {
@@ -18,7 +18,7 @@ function getRedis() {
   return client;
 }
 
-// Sıralama skoru: önce matched (büyük ↑), eşitse süre küçük (hızlı ↑)
+// Sıralama: önce matched (büyük ↑), eşitse süre küçük (hızlı ↑)
 const rankComposite = (matched, timeMs) => matched * 1_000_000_000 - timeMs;
 
 function readJson(req) {
@@ -34,7 +34,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') { res.statusCode = 405; res.end('Method Not Allowed'); return; }
 
   try {
-    // Body: { username, matched, timeMs }
+    // Body: { username, matched, timeMs }  <-- frontend böyle gönderiyor
     const body = await readJson(req);
     let { username, matched, timeMs } = body;
 
@@ -43,9 +43,9 @@ module.exports = async (req, res) => {
       res.end(JSON.stringify({ error: 'Invalid payload' })); return;
     }
 
-    const uname = String(username).toLowerCase().replace(/^@/, '').trim();
+    const uname = String(username).toLowerCase().replace(/^@/,'').trim();
     const m = Math.max(0, Math.min(8, Math.floor(matched)));              // 0..8
-    const t = Math.max(0, Math.min(3_600_000, Math.floor(timeMs)));       // <= 1 saat güvenlik
+    const t = Math.max(0, Math.min(3_600_000, Math.floor(timeMs)));       // <=1 saat
     const composite = rankComposite(m, t);
 
     const r = getRedis();
@@ -56,13 +56,14 @@ module.exports = async (req, res) => {
 
     let updated = false;
     if (curNum == null || composite > curNum) {
-      // ZSET: board → composite (rank için)
-      // HASH: detail:<uname> → username, score (bulunan çift sayısı), updatedAt
+      // ZSET: composite skor (rank için)
+      // HASH: username, score (çift sayısı), elapsedMs (geçen süre), updatedAt
       const multi = r.multi();
       multi.zadd(K('board'), composite, uname);
       multi.hset(K(`detail:${uname}`),
         'username', uname,
-        'score', String(m),          // <-- sadece "score" alanını kullanıyoruz (çift sayısı)
+        'score', String(m),
+        'elapsedMs', String(t),      // <-- eklendi
         'updatedAt', String(Date.now())
       );
       await multi.exec();
