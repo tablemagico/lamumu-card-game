@@ -1,4 +1,4 @@
-// Node.js Serverless Function (Vercel)
+// Node.js Serverless Function (Vercel) – sayfalama + rank
 module.exports.config = { runtime: 'nodejs' };
 
 const Redis = require('ioredis');
@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
     const start = Math.max(0, parseInt(url.searchParams.get('start') ?? '0', 10));
     const count = Math.max(1, Math.min(200, parseInt(url.searchParams.get('count') ?? '50', 10)));
     const rankForRaw = url.searchParams.get('rankFor');
-    const rankFor = rankForRaw ? String(rankForRaw).toLowerCase().replace(/^@/, '').trim() : null;
+    const rankFor = rankForRaw ? String(rankForRaw).toLowerCase().replace(/^@/,'').trim() : null;
 
     const totalPromise = r.zcard(K('board'));
     const members = await r.zrevrange(K('board'), start, start + count - 1);
@@ -44,22 +44,22 @@ module.exports = async (req, res) => {
     if (members.length) {
       const pipe = r.pipeline();
       for (const u of members) {
-        pipe.hmget(K(`detail:${u}`), 'username', 'score', 'updatedAt');
+        pipe.hmget(K(`detail:${u}`), 'username', 'score', 'elapsedMs', 'updatedAt'); // <-- elapsedMs eklendi
       }
       const rows = await pipe.exec();
       items = members.map((u, i) => {
         const arr = rows[i]?.[1] || [];
-        const username = (arr?.[0] || u);
         return {
-          username,
+          username: arr?.[0] || u,
           score: parseInt(arr?.[1] ?? '0', 10),
-          updatedAt: parseInt(arr?.[2] ?? '0', 10)
+          elapsedMs: parseInt(arr?.[2] ?? '0', 10),  // <-- eklendi
+          updatedAt: parseInt(arr?.[3] ?? '0', 10)
         };
       });
     }
 
     res.statusCode = 200;
-    res.setHeader('content-type', 'application/json');
+    res.setHeader('content-type','application/json');
     res.end(JSON.stringify({ items, start, count, total, rank }));
   } catch (e) {
     res.statusCode = 500; res.setHeader('content-type','application/json');
