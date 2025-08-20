@@ -1,6 +1,4 @@
 // Node.js Serverless Function (Vercel)
-// Zorunlu: REDIS_URL
-// İsteğe bağlı: REDIS_NS (varsayılan: "lamu")
 module.exports.config = { runtime: 'nodejs' };
 
 const Redis = require('ioredis');
@@ -19,19 +17,8 @@ function getRedis() {
   return client;
 }
 
-function setNoCache(res) {
-  res.setHeader('Cache-Control','no-store, no-cache, must-revalidate, max-age=0');
-  res.setHeader('Pragma','no-cache');
-  res.setHeader('Expires','0');
-}
-
 module.exports = async (req, res) => {
-  if (req.method !== 'GET') {
-    res.statusCode = 405;
-    setNoCache(res);
-    res.end('Method Not Allowed');
-    return;
-  }
+  if (req.method !== 'GET') { res.statusCode = 405; res.end('Method Not Allowed'); return; }
 
   try {
     const r = getRedis();
@@ -56,7 +43,9 @@ module.exports = async (req, res) => {
     let items = [];
     if (members.length) {
       const pipe = r.pipeline();
-      for (const u of members) pipe.hmget(K(`detail:${u}`), 'username', 'score', 'updatedAt');
+      for (const u of members) {
+        pipe.hmget(K(`detail:${u}`), 'username', 'score', 'updatedAt');
+      }
       const rows = await pipe.exec();
       items = members.map((u, i) => {
         const arr = rows[i]?.[1] || [];
@@ -71,12 +60,9 @@ module.exports = async (req, res) => {
 
     res.statusCode = 200;
     res.setHeader('content-type', 'application/json');
-    setNoCache(res);
     res.end(JSON.stringify({ items, start, count, total, rank }));
   } catch (e) {
-    res.statusCode = 500;
-    res.setHeader('content-type','application/json');
-    setNoCache(res);
+    res.statusCode = 500; res.setHeader('content-type','application/json');
     res.end(JSON.stringify({ error: String(e) }));
   }
 };
