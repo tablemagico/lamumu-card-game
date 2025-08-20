@@ -4,10 +4,6 @@
   <meta charset="utf-8" />
   <title>Lamumu Memory Match</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <!-- CACHE KAPALI -->
-  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     :root{
@@ -170,7 +166,7 @@
     }
     #credits a{ color:var(--amber); text-decoration:underline; }
 
-    /* LEADERBOARD */
+    /* LEADERBOARD (Lamumu stil) */
     #leaderboard{
       position:fixed; top:6rem; right:1rem; z-index:40;
       width:min(320px, 90vw); max-height:70vh; overflow:auto;
@@ -301,21 +297,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
-    // === Cache-bust helper (HER kullanımda farklı query ekler) ===
-    function noCache(url) {
-      try {
-        const u = new URL(url, window.location.origin);
-        // önce eski cb'yi sil, sonra yeni ekle
-        u.searchParams.delete('cb');
-        u.searchParams.set('cb', String(Date.now()) + '-' + Math.random().toString(36).slice(2,7));
-        return u.toString();
-      } catch {
-        // URL parse edilemezse kaba yaklaşım
-        const sep = url.includes('?') ? '&' : '?';
-        return url + sep + 'cb=' + (Date.now() + '-' + Math.random().toString(36).slice(2,7));
-      }
-    }
-
     // iOS gerçek 100vh
     function setVh(){ document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
     document.addEventListener('DOMContentLoaded', () => { setVh(); window.addEventListener('resize', setVh, {passive:true}); });
@@ -327,11 +308,6 @@
     ];
     const BACK_IMAGE = "images/back.png";
     const MEMORIZE_SECONDS = 15, PLAY_SECONDS = 20;
-
-    // Avatar URL üreticileri (BASE + noCache)
-    const avatarBase     = (handle) => `https://unavatar.io/x/${encodeURIComponent(handle)}`;
-    const resolveAvatar  = avatarBase; // base döndür
-    const avatarFor      = (handle) => noCache(avatarBase(handle)); // listeler için her seferinde taze
 
     // DOM
     const boardEl = document.getElementById("board"),
@@ -378,12 +354,10 @@
     let myRank = null;
 
     const sanitizeHandle = (v) => v.replace(/\s+/g,"").replace(/^@/,"");
+    const resolveAvatar = (handle) => `https://unavatar.io/x/${encodeURIComponent(handle)}`;
 
-    function setAllAvatars(urlBase){
-      const fresh = noCache(urlBase);
-      profileAvatar.src = fresh;
-      liveAvatar.src    = fresh;
-      scAvatar.src      = fresh;
+    function setAllAvatars(url){
+      profileAvatar.src = url; liveAvatar.src = url; scAvatar.src = url;
       const onerr = () => { profileAvatar.src = BACK_IMAGE; liveAvatar.src = BACK_IMAGE; scAvatar.src = BACK_IMAGE; };
       profileAvatar.onerror = onerr; liveAvatar.onerror = onerr; scAvatar.onerror = onerr;
     }
@@ -394,10 +368,12 @@
       url.searchParams.set('start', String(start));
       url.searchParams.set('count', String(count));
       if (rankFor) url.searchParams.set('rankFor', rankFor);
-      const res = await fetch(url, { cache: 'no-store', headers: { 'Cache-Control':'no-store' } });
+      const res = await fetch(url);
       if (!res.ok) throw new Error('leaderboard failed');
       return res.json(); // {items[{username,score,updatedAt}], start, count, total, rank?}
     }
+
+    function avatarFor(handle){ return `https://unavatar.io/x/${encodeURIComponent(handle)}`; }
 
     function renderLeaderboardItems(items, startIndex){
       items.forEach((it, idx) => {
@@ -588,7 +564,7 @@
       scScore.textContent = `Score: ${matchedPairs}/${FRONT_IMAGES.length}`;
       scTime.textContent = `Time left: ${currentTimeLeft()}s`;
       scRank.textContent = `Rank: ${typeof myRank === 'number' ? '#' + myRank : '#–'}`;
-      if (avatarUrl) setAllAvatars(avatarUrl); // her seferinde fresh cb ile çeker
+      if (avatarUrl) setAllAvatars(avatarUrl);
     }
 
     async function downloadCurrentScore(filename = "lamumu-score.png"){
@@ -604,9 +580,8 @@
     async function submitScore(username, matched, timeMs){
       const res = await fetch('/api/submit-score', {
         method:'POST',
-        headers:{ 'Content-Type':'application/json', 'Cache-Control':'no-store' },
-        cache: 'no-store',
-        body: JSON.stringify({ username, matched, timeMs })
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ username, matched, timeMs }) // <-- yeni alan isimleri
       });
       if (!res.ok) throw new Error('submit failed');
       return res.json();
