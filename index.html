@@ -297,6 +297,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
+    function formatMs(ms){ 
+    if (!Number.isFinite(ms) || ms<=0) return "–";
+    return (ms/1000).toFixed(2) + "s";
+  }
     // iOS gerçek 100vh
     function setVh(){ document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
     document.addEventListener('DOMContentLoaded', () => { setVh(); window.addEventListener('resize', setVh, {passive:true}); });
@@ -376,20 +380,21 @@
     function avatarFor(handle){ return `https://unavatar.io/x/${encodeURIComponent(handle)}`; }
 
     function renderLeaderboardItems(items, startIndex){
-      items.forEach((it, idx) => {
-        const rank = startIndex + idx + 1;
-        const li = document.createElement('li');
-        li.className = 'lb-item';
-        const av = avatarFor(it.username);
-        li.innerHTML = `
-          <span class="lb-rank">#${rank}</span>
-          <img class="lb-avatar" src="${av}" onerror="this.style.visibility='hidden'"/>
-          <span class="lb-handle">@${it.username}</span>
-          <span class="lb-stats">${it.score}/8</span>
-        `;
-        lbList.appendChild(li);
-      });
-    }
+  items.forEach((it, idx) => {
+    const rank = startIndex + idx + 1;
+    const li = document.createElement('li');
+    li.className = 'lb-item';
+    const av = avatarFor(it.username);
+    li.innerHTML = `
+      <span class="lb-rank">#${rank}</span>
+      <img class="lb-avatar" src="${av}" onerror="this.style.visibility='hidden'"/>
+      <span class="lb-handle">@${it.username}</span>
+      <span class="lb-stats">${it.score}/8 • ${formatMs(it.elapsedMs)}</span>
+    `;
+    lbList.appendChild(li);
+  });
+}
+
 
     async function resetAndLoadLeaderboard(rankFor=null){
       lbList.innerHTML = '';
